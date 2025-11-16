@@ -1,20 +1,23 @@
-kubectl apply -f - <<EOF
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+kubectl apply -f - <<'EOF'
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: nginx
+  name: argocd
   namespace: argocd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/backend-protocol: h2c
 spec:
-  project: default
-  source:
-    repoURL: "<jouw-git-url>"
-    targetRevision: "main"
-    path: "nginx"
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: "default"
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+  ingressClassName: traefik
+  rules:
+  - host: argocd.ash-lab.xyz
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
 EOF
